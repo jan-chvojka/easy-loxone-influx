@@ -3,77 +3,42 @@
 
 
 import logging
+import os
 import random
-import time
-from paho.mqtt import client as mqtt_client
+import argparse
+from loxone_listener import loxone_listener_main
+from mqtt import mqtt_run
 
-broker = 'localhost'
-port = 1883
-topic = "python/mqtt"
-client_id = f'python-mqtt-{random.randint(0, 1000)}'
-# username = 'username'
-# password = 'password'
+logging.basicConfig(encoding='utf-8', level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
-FIRST_RECONNECT_DELAY = 1
-RECONNECT_RATE = 2
-MAX_RECONNECT_COUNT = 12
-MAX_RECONNECT_DELAY = 60
+broker_host = os.getenv('MQTT_HOST', '127.0.0.1')
+broker_port = int(os.getenv('MQTT_PORT', 1883))
+topic = os.getenv('MQTT_TOPIC', 'loxone')
+client_id = os.getenv('MQTT_CLIENT_ID', f'loxone-{random.randint(0, 1000)}')
 
-def connect_mqtt():
-    def on_connect(client, userdata, flags, rc, properties):
-        if rc == 0:
-            print("Connected to MQTT Broker!")
-        else:
-            print("Failed to connect, return code %d\n", rc)
-    client = mqtt_client.Client(client_id=client_id, callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2)
+def parse_args():
+    """Parse the args."""
+    parser = argparse.ArgumentParser(
+        add_help=False, description='Simple Loxone to InfluxDB script')
+    parser.add_argument('-h', '--host', type=str, required=False,
+                        default=broker_host,
+                        help='hostname of mqtt')
+    parser.add_argument('-p', '--port', type=int, required=False, default=broker_port,
+                        help='port of mqtt')
+    parser.add_argument('-t', '--topic', default=topic, action="store_true",
+                        help='name of mqtt topic to listen to')
+    parser.add_argument('-c', '--client-id', default=client_id, action="store_true",
+                        help='client id for mqtt connection')
+    parser.add_argument('-d', '--debug', action="store_true", default=bool(os.getenv('DEBUG', False)),
+                        help='debug code')
+    parser.add_argument('-?', '--help', action='help',
+                        help='show this help message and exit')
+    return parser.parse_args()
 
-    # client.username_pw_set(username, password)
-    client.on_connect = on_connect
-    client.connect(broker, port)
-    return client
-  
-def on_disconnect(client, userdata, rc):
-    logging.info("Disconnected with result code: %s", rc)
-    reconnect_count, reconnect_delay = 0, FIRST_RECONNECT_DELAY
-    while reconnect_count < MAX_RECONNECT_COUNT:
-        logging.info("Reconnecting in %d seconds...", reconnect_delay)
-        time.sleep(reconnect_delay)
-
-        try:
-            client.reconnect()
-            logging.info("Reconnected successfully!")
-            return
-        except Exception as err:
-            logging.error("%s. Reconnect failed. Retrying...", err)
-
-        reconnect_delay *= RECONNECT_RATE
-        reconnect_delay = min(reconnect_delay, MAX_RECONNECT_DELAY)
-        reconnect_count += 1
-    logging.info("Reconnect failed after %s attempts. Exiting...", reconnect_count)
-    
-def publish(client):
-    msg_count = 1
-    while True:
-        time.sleep(1)
-        msg = f"messages: {msg_count}"
-        result = client.publish(topic, msg)
-        # result: [0, 1]
-        status = result[0]
-        if status == 0:
-            print(f"Send `{msg}` to topic `{topic}`")
-        else:
-            print(f"Failed to send message to topic {topic}")
-        msg_count += 1
-        if msg_count > 5:
-            break    
-  
-def run():
-  client = connect_mqtt()
-  client.on_disconnect = on_disconnect
-  client.loop_start()
-  publish(client)
-  client.loop_stop()
-  
-  
 if __name__ == '__main__':
-  run()
+  logger.info("Start")
+  args = parse_args()
+  
+  mqtt_run(args.host, args.port, args.topic, args.client_id, args.debug)
+  # loxone_listener_main(args.debug)
