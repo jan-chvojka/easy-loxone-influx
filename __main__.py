@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 broker_host = os.getenv('MQTT_HOST', '127.0.0.1')
 broker_port = int(os.getenv('MQTT_PORT', 1883))
-topic = os.getenv('MQTT_TOPIC', 'loxone')
+topic = os.getenv('MQTT_TOPIC', 'smarthome')
 client_id = os.getenv('MQTT_CLIENT_ID', f'loxone-{random.randint(0, 1000)}')
 
 def parse_args():
