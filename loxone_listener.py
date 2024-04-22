@@ -20,6 +20,12 @@ logger = logging.getLogger(__name__)
 localIP = os.getenv('BIND_ADDRESS', '0.0.0.0')
 localPort = int(os.getenv('BIND_PORT', 2222))
 
+class LoxoneListenerOptions:
+    def __init__(self, host: str, port: int, debug: bool):
+        self.host = host
+        self.port = port
+        self.debug = debug
+
 
 def parse_log_data(data, from_zone, to_zone, debug=False):
     """
@@ -105,7 +111,7 @@ def parse_log_data(data, from_zone, to_zone, debug=False):
     return json_body
 
 
-def loxone_listener_main(debug=False):
+def init_loxone_listener(on_received, options: LoxoneListenerOptions):
     """Instantiate a connection to the InfluxDB and stard listening on UDP port for incoming messages"""
     # client = InfluxDBClient(host, port, dbuser, dbuser_code, dbname, ssl, verify)
 
@@ -115,12 +121,12 @@ def loxone_listener_main(debug=False):
 
     # A UDP server
     # Set up a UDP server
-    logger.info('Listening for incoming Loxone UDP packets on %s:%s', localIP, localPort)
+    logger.info('Listening for incoming Loxone UDP packets on %s:%s', options.host, options.port)
     udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     # Listen on local port
     # (to all IP addresses on this system)
-    listen_addr = (localIP, localPort)
+    listen_addr = (options.host, options.port)
     udp_sock.bind(listen_addr)
     logger.debug('Socket attached')
 
@@ -130,6 +136,6 @@ def loxone_listener_main(debug=False):
     # up to the server to sort this out!)
     while True:
         data, addr = udp_sock.recvfrom(1024)
-        json_body_log = parse_log_data(data, from_zone, to_zone, debug)
-        # Write to influx DB
-        # client.write_points(json_body_log)
+        json_body_log = parse_log_data(data, from_zone, to_zone, options.debug)
+        # Process message
+        on_received(json_body_log)

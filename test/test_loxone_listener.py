@@ -1,6 +1,6 @@
 import unittest
 from dateutil import tz
-from Loxone2InfluxDB import parse_log_data
+from loxone_listener import parse_log_data
 
 
 class ParsingTestCase(unittest.TestCase):

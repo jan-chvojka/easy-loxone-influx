@@ -1,6 +1,5 @@
 import logging
-import os
-import random
+from paho.mqtt.client import Client
 import time
 from paho.mqtt import client as mqtt_client
 
@@ -10,6 +9,31 @@ MAX_RECONNECT_COUNT = 12
 MAX_RECONNECT_DELAY = 60
 
 logger = logging.getLogger(__name__)
+current_client: Client
+
+
+class MqttOptions:
+    def __init__(self, host: str, port: int, client_id: str, topic: str, debug: bool):
+        self.host = host
+        self.port = port
+        self.client_id = client_id
+        self.topic = topic
+        self.debug = debug
+
+class MqttService:
+    def __init__(self, client: Client, options: MqttOptions):
+        self.client = client
+        self.options = options
+
+    def publish(self, message):
+        result = self.client.publish(self.options.topic, message)
+        # result: [0, 1]
+        status = result[0]
+        if status == 0:
+            logger.debug(f"Send `{message}` to topic `{self.options.topic}`")
+        else:
+            logger.error(f"Failed to send message to topic {self.options.topic}")
+
 
 def connect_mqtt(host: str, port: int, client_id: str):
     def on_connect(client, userdata, flags, rc, properties):
@@ -43,27 +67,20 @@ def on_disconnect(client, userdata, rc):
         reconnect_count += 1
     logger.info("Reconnect failed after %s attempts. Exiting...", reconnect_count)
     
-def publish(client, topic):
-    msg_count = 1
-    while True:
-        time.sleep(1)
-        msg = f"messages: {msg_count}"
-        result = client.publish(topic, msg)
-        # result: [0, 1]
-        status = result[0]
-        if status == 0:
-            logger.debug(f"Send `{msg}` to topic `{topic}`")
-        else:
-            logger.error(f"Failed to send message to topic {topic}")
-        msg_count += 1
-        if msg_count > 5:
-            break    
-  
-def mqtt_run(host: str, port: int, topic: str, client_id: str, debug: bool = False):
-  logger.info(f"MQTT Run: {host} {port} {topic} {client_id} {debug}")
-  client = connect_mqtt(host, port, client_id)
-  client.on_disconnect = on_disconnect
-  client.loop_start()
-  publish(client, topic)
-  client.loop_stop()
+
+
+def mqtt_init(options: MqttOptions):
+    logger.info(f"MQTT Init: {options.host} {options.port} {options.topic} {options.client_id} {options.debug}")
+    current_client = connect_mqtt(options.host, options.port, options.client_id)
+    current_client.on_disconnect = on_disconnect
+
+    return MqttService(client=current_client, options=options)
+# # just for example purpose 
+# def mqtt_run(host: str, port: int, topic: str, client_id: str, debug: bool = False):
+#   logger.info(f"MQTT Run: {host} {port} {topic} {client_id} {debug}")
+#   client = connect_mqtt(host, port, client_id)
+#   client.on_disconnect = on_disconnect
+#   client.loop_start()
+#   publish(client, topic)
+#   client.loop_stop()
   
