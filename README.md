@@ -5,7 +5,7 @@
 
 This tutorial shows you how to easily send Loxone statistics to InfluxDB 1.8 timescale database through UDP messages. Once you have your data stored InfluxDB, you can visualize them with Grafana.
 
-<img src="/pics/00.png" alt="00" style="zoom:100%;" />
+<img src="./pics/00.png" alt="00" style="zoom:100%;" />
 
 ## How to connect Loxone to InfluxDB?
 
@@ -27,7 +27,7 @@ There are essentially two solutions. Both of them allow you to set measurement n
 
 Here is a quick look at how it works:
 
-<img src="/pics/02.png" alt="02" style="zoom:100%;" />
+<img src="./pics/02.png" alt="02" style="zoom:100%;" />
 
 For detailed instructions, go to a [UDP LOGGER -> INFLUXDB TUTORIAL](https://github.com/budulinek/easy-loxone-influx/blob/master/1.UDP%20logger.md) .
 
@@ -45,6 +45,6 @@ For detailed instructions, go to a [UDP LOGGER -> INFLUXDB TUTORIAL](https://git
 
 Here is a quick look at how it works:
 
-<img src="/pics/10.png" alt="10" style="zoom:100%;" />
+<img src="./pics/10.png" alt="10" style="zoom:100%;" />
 
 For detailed instructions, go to a [VIRTUAL OPUTPUT -> INFLUXDB TUTORIAL](https://github.com/budulinek/easy-loxone-influx/blob/master/2.Virtual%20output.md) .

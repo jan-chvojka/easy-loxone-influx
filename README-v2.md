@@ -21,4 +21,6 @@ source .venv/bin/activate # macOS and Linux
 pip install -r requirements.txt
 ```
 
+## Overview
 
+![overview](./pics/loxone-listener-v2.excalidraw.png)
